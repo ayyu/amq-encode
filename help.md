@@ -1,6 +1,8 @@
 # ffmpeg scripts for handicaps
 
-These scripts expedite 2-pass VP9/Opus encoding for AMQ using `ffmpeg`.
+These scripts expedite 2-pass VP9/Opus encoding for AMQ using `ffmpeg`. They are basically all wrappers for ffmpeg.
+
+Windows versions will probably never exist.
 
 ## Requirements
 
@@ -8,7 +10,7 @@ These scripts expedite 2-pass VP9/Opus encoding for AMQ using `ffmpeg`.
   - if you're on Windows 10, you can use [WSL](https://docs.microsoft.com/en-us/windows/wsl/install-win10).
   - if you're on older Windows versions, it might be time to upgrade.
   - OS X/Linux users know what they're doing.
-- `ffmpeg`
+- `ffmpeg` and `ffprobe`
   - in bash, do `sudo apt update && sudo apt install ffmpeg`
 - some level of comfort using a terminal
   - This might be a tall ask.
@@ -24,6 +26,74 @@ sudo install /home/amq_scripts/*.sh /usr/local/bin/
 You should be able to run the scripts from any directory after doing that.
 Make sure all the scripts are in the same folder as several of them depend on each other.
 
+## Included scripts
+
+### `amq_encode.sh`
+
+2-pass VP9 encoding with CRF 20. Generates output files named `720.webm`, `480.webm`, and `0.mp3`.
+You may need to specify additional video filters if your source file is inadequate.
+
+Options:
+
+- `-vf`: will prepend your desired filters before the `scale` and `setsar` filters
+- `-crf`: will override the default CRF of 20
+- any other ffmpeg options should also get passed if specified
+
+Outputs to directory `./source/`
+
+### `amq_mux.sh`
+
+Muxes a clean audio track to all files in the specified input directory.
+Make sure your clean audio file is synced to and already about the same length as the video files.
+
+This will ignore an existing MP3 file in the input directory and instead encode directly from your clean file to a new MP3.
+The drawback is that it won't truncate the clean to the same length as the existing MP3, so it's best to make sure your clean is the same duration as your video.
+
+Options:
+
+- `-a`: path to clean audio file
+- `-i`: path to folder containing videos to be muxed. Usually, you want to choose `source` to use the outputs from `amq_mux.sh`
+
+Outputs to directory `./clean/`
+
+### `amq_volume_norm.sh`
+
+Adjusts audio levels to -18 dB and -1 dB peak.
+`norm` is a misnomer as it doesn't actually normalize audio, but just applies gain to each file as needed.
+However, I am an ape and won't rename it at this point.
+Depends on `amq_volume_detect.sh`.
+
+Options:
+
+- `-i`: path to input file
+
+Outputs to directory `./norm/`
+
+### `amq_volume_auto.sh`
+
+Applies `amq_volume_norm.sh` to all files in the specified directory.
+
+Options:
+
+- `-i`: path to folder containing videos to be adjusted
+
+Outputs to directory `./norm/`
+
+### `amq_volume_detect.sh`
+
+Wrapper for the `-af volumedetect` filter in ffmpeg. Extracts values for `mean_volume` and `max_volume` into shell variables and calculates the difference between `mean_volume` and `target_mean` as specified in `amq_settings.sh`.
+
+Options:
+
+- `-i`: path to input file
+
+Does not produce any output besides assigning some shell variables.
+
+### `amq_settings.sh`
+
+Shared settings between the scripts, including things like desired audio levels and audio bitrates.
+Place this in the same directory as the other scripts or none of them will work.
+
 ## Usage
 
 ### 1. Encoding video
@@ -33,7 +103,7 @@ This is usually the first thing you will use.
 
 First, pick your start and end timestamps from your source video, ideally to the millisecond level. You can use a player capable of frame advancing and millisecond display to do this. [mpv](https://mpv.io/) works quite well. You can also use an audio editor to do this.
 
-Pass them to `amq_encode.sh` with the `-ss` and `-to` flags, respectively.
+Pass them to `amq_encode.sh` with the `-ss` and `-to` options, respectively.
 
 ```bash
 amq_encode.sh -i "[LowPower-Raws] Tokyo 7th Sisters (Bluray-1080p).mkv" -ss 58:05.679 -to 1:00:48.491
@@ -73,7 +143,7 @@ Once you have your clean audio, you can mux it with your previously encoded outp
 amq_mux.sh -i "source" -a "clean.wav"
 ```
 
-where the flags `-i` points to your video folder and `-a` points to your clean audio file.
+where the options `-i` points to your video folder and `-a` points to your clean audio file.
 This generates outputs in a `clean` folder.
 
 Then apply the same audio adjustment as in step 2, but pointing to your `clean` folder instead of `source`:
@@ -91,7 +161,9 @@ Yes I am aware that this introduces generation loss but it's minimal at the pres
 
 They add some amount of silence to the beginning and end of the file,
 so your audio will be slightly out of sync with the video if they were originally synced properly in your editing software.
-You can of course still use MP3/FLAC for your sources (as long as they are of acceptable quality).
+
+Once you've finished editing your clean, export it as some other format. WAV works fine.
+You can of course still use MP3/FLAC for your sources to be edited (as long as they are of acceptable quality).
 
 ### Audio quality
 

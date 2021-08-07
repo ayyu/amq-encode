@@ -59,7 +59,7 @@ do
 	fi
 	if [[ "$source_height" -ge "$scale" || "$scale" -eq 480 ]]; then
 		echo "encoding $scale"
-		if [[ "$scale" -q 0 ]]; then # MP3
+		if [[ "$scale" -eq 0 ]]; then # MP3
 			ffmpeg \
 				-y -i "$file" \
 				$meta_settings \
