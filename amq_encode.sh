@@ -41,7 +41,7 @@ set -- "${POSITIONAL[@]}" # restore positional parameters
 
 source "${BASH_SOURCE%/*}/amq_settings.sh"
 
-map_settings="-map 0:a -map 0:v -shortest"
+map_settings="-map 0 -shortest"
 video_settings="-c:v libvpx-vp9 -b:v 0 -g 119 -crf $crf -pix_fmt yuv420p"
 cpu_settings="-deadline good -cpu-used 1 -row-mt 1 -frame-parallel 0 -tile-columns 2 -tile-rows 0 -threads 4"
 
@@ -51,9 +51,9 @@ echo "outputs to $out_dir"
 source_height=$(ffprobe -v error -select_streams v:0 -show_entries stream=height -of default=nw=1:nk=1 "$file")
 echo "source height is $source_height"
 
-for scale in 0 480 720
+for scale in 0 360 480 720
 do
-	if [[ "$skip" == *"$scale"* ]]; then
+	if [[ "$skip" == *",$scale"* ]]; then
 		echo "skipping $scale"
 		continue
 	fi
