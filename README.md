@@ -36,13 +36,13 @@ If you just want to encode a file without writing a standalone script, you can c
 *nix
 
 ```bash
-python3 -m amqencode.encode
+python3 -m amqencode
 ```
 
 Windows
 
 ```cmd
-py -3 -m amqencode.encode
+py -3 -m amqencode
 ```
 
 However, this is incapable of muxing clean audio into an encode.
