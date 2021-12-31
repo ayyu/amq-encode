@@ -2,10 +2,10 @@
 
 This Python 3 module simplifies 2-pass VP9/Opus encoding for AMQ using `ffmpeg`.
 It's basically a wrapper with presets for [ffmpeg-python](https://github.com/kkroening/ffmpeg-python),
-with some hacky stuff to get 2-pass working.
-You can override a lot of the presets.
+with some hacky stuff to get 2-pass encodes working.
 
-Also, passing `norm=True` automatically adjusts volume levels for you.
+You can override a lot of the presets.
+Passing `norm=True` automatically adjusts volume levels for you.
 
 I'll write up documentation later.
 
@@ -22,6 +22,8 @@ or maybe this on Windows
 ```cmd
 py -3 -m pip install amqencode
 ```
+
+Also make sure that ffmpeg is on your PATH.
 
 ## Usage
 
