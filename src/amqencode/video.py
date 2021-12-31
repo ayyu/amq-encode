@@ -1,9 +1,16 @@
+__all__ = [
+  'vp9_settings',
+  'resolutions',
+  'probe_dimensions'
+]
+
+
 from fractions import Fraction
 from typing import Dict, Union
 
 import ffmpeg
 
-from .common import apply_filters, get_null_output, parse_filter_string
+from . import common
 
 vp9_settings = {
   'c:v': 'libvpx-vp9',
@@ -22,6 +29,10 @@ vp9_settings = {
 
 resolutions = [0, 360, 480, 720]
 
+init_vf = {
+  'scale': 1,
+  'setsar': 1
+}
 
 def probe_dimensions(input_file: str) -> Dict[str, any]:
   """Returns a dict of dimensional info for the input"""
@@ -30,25 +41,25 @@ def probe_dimensions(input_file: str) -> Dict[str, any]:
     'width': int(metadata['width']),
     'height': int(metadata['height']),
     'sar': Fraction(metadata['sample_aspect_ratio'].replace(':', '/')),
-    'dar': Fraction(metadata['display_aspect_ratio'].replace(':', '/'))
-  }
+    'dar': Fraction(metadata['display_aspect_ratio'].replace(':', '/'))}
 
 
 def encode_webm(
-  input_file: str,
-  output_file: str,
-  vf: Union[str, dict]={},
-  af: Union[str, dict]={},
-  **kwargs) -> None:
+    input_file: str,
+    output_file: str,
+    vf: Union[str, dict] = {},
+    af: Union[str, dict] = {},
+    **kwargs) -> None:
+  """Encodes a webm from the supplied inputs"""
   input = ffmpeg.input(input_file)
-  audio = apply_filters(input.audio, parse_filter_string(af))
-  video = apply_filters(input.video, parse_filter_string(vf))
-  ffmpeg.output(video, get_null_output(), format='null', **dict({'pass': 1}, **kwargs)).run()
-  ffmpeg.output(audio, video, output_file, format='webm', **dict({'pass': 2}, **kwargs)).run(overwrite_output=True)
+  audio = common.apply_filters(input.audio, common.parse_filter_string(af))
+  video = common.apply_filters(input.video, common.parse_filter_string(vf))
+  ffmpeg.output(
+    video,
+    common.get_null_output(), format='null',
+    **dict({'pass': 1}, **kwargs)).run()
+  ffmpeg.output(
+    audio, video,
+    output_file, format='webm',
+    **dict({'pass': 2}, **kwargs)).run(overwrite_output=True)
 
-
-__all__ = [
-  'vp9_settings',
-  'resolutions',
-  'probe_dimensions'
-]
