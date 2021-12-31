@@ -1,12 +1,24 @@
 import os
+from typing import Union, Dict
 
-def get_null_output():
+from ffmpeg.nodes import stream_operator
+
+map_settings = {
+  'map_metadata': -1,
+  'map_chapters': -1,
+  'sn': '-sn'
+}
+
+def get_null_output() -> str:
+  """Returns the name of the null output device based on OS"""
   if os.name == 'nt':
     return 'NUL'
   return '/dev/null/'
 
 
-def dict_filter_stream(stream, filters):
+def apply_filters(stream: object, filters: Union[str, list]) -> object:
+  """Returns the supplied ffmpeg-python input object with filters applied"""
+  filters = parse_filter_string(filters)
   for k, v in filters.items():
     if v == None:
       stream = stream.filter(k)
@@ -14,8 +26,12 @@ def dict_filter_stream(stream, filters):
       stream = stream.filter(k, v)
   return stream
 
-def parse_filter_string(input_string):
-  return dict([x.split('=') if '=' in x else [x, None] for x in input_string.split(',')])
+
+def parse_filter_string(input_filters: Union[str, dict]) -> Dict[str, any]:
+  """Converts a filter string into a filter dict"""
+  if isinstance(input_filters, str) and len(str) > 0:
+    return dict([x.split('=') if '=' in x else [x, None] for x in input.split(',')])
+  return input_filters
 
 
 __all__ = [

@@ -1,92 +1,100 @@
 #!/usr/bin/env python3
 
-import os
 import argparse
+import os
+from typing import Union
+
 import ffmpeg
 
-from .common import *
-from .audio import *
-from .video import *
-
-map_settings = {
-  'map_metadata': -1,
-  'map_chapters': -1,
-  'map_subtitles': -1
-}
-
-def encode_webm(input_name, output_name, vf={}, af={}, **kwargs):
-  input = ffmpeg.input(input_name)
-  audio = dict_filter_stream(input.audio, af)
-  video = dict_filter_stream(input.video, vf)
-  ffmpeg.output(video, get_null_output(), format='null', **dict({'pass': 1}, **kwargs)).run()
-  ffmpeg.output(audio, video, output_name, format='webm', **dict({'pass': 2}, **kwargs)).run(overwrite_output=True)
-  
-
-def encode_mp3(input_name, output_name, af={}, **kwargs):
-  input = ffmpeg.input(input_name)
-  audio = dict_filter_stream(input.audio, af)
-  stream = ffmpeg.output(audio, output_name, format='mp3', **kwargs)
-  stream.run(overwrite_output=True)
+from . import audio, common, video
 
 
-def mux_folder(input_dir, input_audio, output_dir, norm=False):
+def mux_folder(
+  input_dir: str,
+  input_audio: str,
+  output_dir: str,
+  norm: bool=False) -> None:
+  """Muxes all mp3 and webm files in the input directory with a clean audio input file"""
+
   for file in os.listdir(input_dir):
     if file.endswith(('.webm', '.mp3')):
       mux_clean(os.path.join(input_dir, file), input_audio, os.path.join(output_dir, file), norm)
 
 
-def mux_clean(input_video, input_audio, output_file, norm=False):
-  audio = ffmpeg.input(input_audio).audio
-  video = ffmpeg.input(input_video).video
+def mux_clean(
+  input_video: str,
+  input_audio: str,
+  output_file: str,
+  norm: bool=False) -> None:
+  """Muxes a given video input file with a clean audio input file"""
+
+  audio_s = ffmpeg.input(input_audio).audio
   if norm:
-    audio = dict_filter_stream(audio, get_norm_filter(input_audio))
+    audio_s = common.apply_filters(audio_s, audio.get_norm_filter(input_audio))
   if not os.path.exists(os.path.dirname(output_file)):
     os.makedirs(os.path.dirname(output_file))
   if input_video.endswith('.mp3'):
-    args = dict({'shortest': '-vn'}, **mp3_settings, **audio_settings)
+    args = dict({'shortest': '-vn'}, **audio.mp3_settings, **audio.audio_settings)
     stream = ffmpeg.output(audio, output_file, **args)
   else:
-    args = dict({'c:v': 'copy', 'shortest': '-shortest'}, **opus_settings, **audio_settings)
-    stream = ffmpeg.output(video, audio, output_file, **args)
+    video_s = ffmpeg.input(input_video).video
+    args = dict({'c:v': 'copy', 'shortest': '-shortest'}, **audio.opus_settings, **audio.audio_settings)
+    stream = ffmpeg.output(video_s, audio_s, output_file, **args)
   stream.run(overwrite_output=True)
 
 
 def encode_all(
-  input_name, output_dir,
-  vf={}, af={},
-  norm=False,
-  crf=vp9_settings['crf'], g=vp9_settings['g'],
-  skip=[],
-  resolutions=resolutions,
-  **kwargs):
-  video_settings = vp9_settings
-  video_settings.update(crf=crf)
-  video_settings.update(g=g)
-  probe_data = probe_video(input_name)
+  input_file: str,
+  output_dir: str,
+  vf: Union[str, dict]={},
+  af: Union[str, dict]={},
+  norm: bool=False,
+  vp9_settings: dict={},
+  resolutions: list=video.resolutions,
+  **kwargs) -> None:
+  """Encodes a video in all requested resolutions and an mp3."""
+
+  vp9_settings = dict(video.vp9_settings, **vp9_settings)
   if not os.path.exists(output_dir):
     os.makedirs(output_dir)
+  # turn filters into dicts
+  vf = common.parse_filter_string(vf)
+  af = common.parse_filter_string(af)
   if norm:
     print('Detecting input volume')
-    af.update(get_norm_filter(input_name, **kwargs))
-  vf.update(scale=1)
-  vf.update(setsar=1)
+    af = dict(af, **audio.get_norm_filter(input_file, **kwargs))
+  vf.update(scale=1, setsar=1)
+  probe_data = video.probe_dimensions(input_file)
+  # common settings
+  settings = dict(
+    kwargs,
+    **common.map_settings,
+    **audio.audio_settings)
+  # sort unique resolutions
+  resolutions.sort(list(set(resolutions)))
+  # smallest non-zero res
+  smallest_video = next((i for i, x in enumerate(resolutions) if x), None)
   for resolution in resolutions:
-    if resolution in skip:
-      print('Skipping {}p due to passed -skip argument'.format(resolution))
-      continue
     output_stem = os.path.join(output_dir,str(resolution))
     if resolution == 0:
       print('Encoding mp3')
-      settings = dict(kwargs, **map_settings, **mp3_settings, **audio_settings)
-      encode_mp3(input_name, output_stem+'.mp3', af, **settings)
+      mp3_settings = dict(
+        settings,
+        **audio.mp3_settings)
+      audio.encode_mp3(input_file, output_stem+'.mp3', af, **mp3_settings)
     else:
-      if probe_data['height']+10 < resolution and resolution > resolutions[1]:
+      if (probe_data['height']+16 > resolution
+        or resolution == smallest_video):
+        webm_settings = dict(
+          settings,
+          **vp9_settings,
+          **audio.opus_settings)
+        vf.update(scale='{w}x{h}'.format(w=round(probe_data['dar']*resolution),h=resolution))
+        print('Encoding {}p webm'.format(resolution))
+        video.encode_webm(input_file, output_stem+'.webm', vf, af, **webm_settings)
+      else:
         print('Skipping {}p due to insufficient input dimensions'.format(resolution))
         continue
-      settings = dict(kwargs, **map_settings, **video_settings, **opus_settings, **audio_settings)
-      vf.update(scale='{w}x{h}'.format(w=round(probe_data['dar']*resolution),h=resolution))
-      print('Encoding {}p webm'.format(resolution))
-      encode_webm(input_name, output_stem+'.webm', vf, af, **settings)
 
 
 if __name__ == "__main__":
@@ -94,8 +102,8 @@ if __name__ == "__main__":
   parser.add_argument('-i', type=str, required=True, help='input video')
   parser.add_argument('-crf', type=int, help='constant rate factor')
   parser.add_argument('-g', type=int, help='interval between keyframes')
-  parser.add_argument('-vf', '-filter:v', type=str, help='video filter string')
-  parser.add_argument('-af', '-filter:a', type=str, help='audio filter string')
+  parser.add_argument('-vf', '-filter:v', type=str, default='', help='video filter string')
+  parser.add_argument('-af', '-filter:a', type=str, default='', help='audio filter string')
   parser.add_argument('-ss', type=str, help='start time')
   parser.add_argument('-to', type=str, help='end time')
   parser.add_argument('-t', type=str, help='encode duration')
@@ -103,8 +111,6 @@ if __name__ == "__main__":
   parser.add_argument('-out', type=str, help='output path')
   parser.add_argument('-skip', type=int, nargs='+', help='resolutions to skip')
   parser.set_defaults(
-    crf=vp9_settings['crf'],
-    g=vp9_settings['g'],
     norm=False,
     out='./source/',
     skip=[]
@@ -112,27 +118,27 @@ if __name__ == "__main__":
   args = parser.parse_args()
 
   if not os.path.isfile(args.i):
-    print('invalid input provided')
+    print('invalid input file provided')
     exit()
+  
+  kwargs = {k: v for k, v in {
+    'ss': args.ss,
+    'to': args.to,
+    't': args.t
+    }.items() if not v == None}
 
-  vf = {'scale': 1,'setsar': 1}
-  af = {}
-  kwargs = {}
+  vp9_settings = {k: v for k, v in {
+    'crf': args.crf,
+    'g': args.g
+    }.items() if not v == None}
 
-  if args.vf:
-    vf.update(parse_filter_string(args.vf))
-  if args.af:
-    af.update(parse_filter_string(args.af))
-  if args.ss:
-    kwargs.update(ss=args.ss)
-  if args.to:
-    kwargs.update(to=args.to)
-  if args.t:
-    kwargs.update(t=args.t)
+  encode_all(args.i, args.out,
+    vf=args.vf, af=args.af,
+    norm=args.norm,
+    vp9_settings=vp9_settings,
+    **kwargs)
 
-  encode_all(args.i, args.out, vf=vf, af=af, norm=args.norm, crf=args.crf, g=args.g, skip=args.skip, **kwargs)
-
-
+  
 __all__ = [
   'encode_all',
   'encode_webm',
