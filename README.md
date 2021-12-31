@@ -2,6 +2,4 @@
 
 These scripts expedite 2-pass VP9/Opus encoding for AMQ using `ffmpeg`. They are basically all wrappers for ffmpeg.
 
-Windows versions will probably never exist.
-
-See [the repo wiki](https://github.com/ayyu/amq-encoding/wiki) for help on using them.
+Python module now exists. I'll write it up later
