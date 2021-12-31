@@ -3,6 +3,7 @@ README.md
 pyproject.toml
 setup.cfg
 src/amqencode/__init__.py
+src/amqencode/__main__.py
 src/amqencode/audio.py
 src/amqencode/common.py
 src/amqencode/encode.py

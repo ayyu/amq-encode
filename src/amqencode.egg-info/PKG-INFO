@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: amqencode
-Version: 0.1.1
+Version: 0.1.2
 Summary: Encoding utility for Anime MusicQUiz
 Home-page: https://github.com/ayyu/amq-encoding
 Author: ayyu
@@ -19,10 +19,10 @@ License-File: LICENSE
 
 This Python 3 module simplifies 2-pass VP9/Opus encoding for AMQ using `ffmpeg`.
 It's basically a wrapper with presets for [ffmpeg-python](https://github.com/kkroening/ffmpeg-python),
-with some hacky stuff to get 2-pass working.
-You can override a lot of the presets.
+with some hacky stuff to get 2-pass encodes working.
 
-Also, passing `norm=True` automatically adjusts volume levels for you.
+You can override a lot of the presets.
+Passing `norm=True` automatically adjusts volume levels for you.
 
 I'll write up documentation later.
 
@@ -40,6 +40,8 @@ or maybe this on Windows
 py -3 -m pip install amqencode
 ```
 
+Also make sure that ffmpeg is on your PATH.
+
 ## Usage
 
 `import amqencode` in your python scripts.
@@ -51,13 +53,13 @@ If you just want to encode a file without writing a standalone script, you can c
 *nix
 
 ```bash
-python3 -m amqencode.encode
+python3 -m amqencode
 ```
 
 Windows
 
 ```cmd
-py -3 -m amqencode.encode
+py -3 -m amqencode
 ```
 
 However, this is incapable of muxing clean audio into an encode.
