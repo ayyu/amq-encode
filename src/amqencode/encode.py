@@ -71,7 +71,7 @@ def encode_all(
     **common.map_settings,
     **audio.audio_settings)
   # sort unique resolutions
-  resolutions.sort(list(set(resolutions)))
+  resolutions = sorted(list(set(resolutions)))
   # smallest non-zero res
   smallest_video = next((i for i, x in enumerate(resolutions) if x), None)
   for resolution in resolutions:

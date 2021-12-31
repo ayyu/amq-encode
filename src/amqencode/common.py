@@ -29,8 +29,11 @@ def apply_filters(stream: object, filters: Union[str, list]) -> object:
 
 def parse_filter_string(input_filters: Union[str, dict]) -> Dict[str, any]:
   """Converts a filter string into a filter dict"""
-  if isinstance(input_filters, str) and len(str) > 0:
-    return dict([x.split('=') if '=' in x else [x, None] for x in input.split(',')])
+  if isinstance(input_filters, str):
+    if len(input_filters) > 0:
+      return dict([x.split('=') if '=' in x else [x, None] for x in input.split(',')])
+    else:
+      return {}
   return input_filters
 
 
