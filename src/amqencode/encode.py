@@ -2,7 +2,7 @@ __all__ = [
   'encode_all',
   'encode_webm',
   'encode_mp3',
-  'mux_folder',
+  'mux_clean_directory',
   'mux_clean',
 ]
 
@@ -15,7 +15,7 @@ import ffmpeg
 from . import audio, common, video
 
 
-def mux_folder(
+def mux_clean_directory(
     input_dir: str,
     input_audio: str,
     output_dir: str = './clean/',
@@ -28,6 +28,9 @@ def mux_folder(
         input_audio,
         os.path.join(output_dir, file),
         norm)
+
+
+mux_folder = mux_clean_directory
 
 
 def mux_clean(
@@ -75,7 +78,8 @@ def encode_all(
   if norm:
     print('Detecting input volume')
     af = dict(af, **audio.get_norm_filter(input_file, **kwargs))
-  probe_data = video.probe_dimensions(input_file).update(override_dimensions)
+  probe_data = video.probe_dimensions(input_file)
+  probe_data.update(override_dimensions)
   # common settings
   common_settings = dict(
     common.map_settings,
@@ -87,7 +91,7 @@ def encode_all(
   for resolution in resolutions:
     output_file = os.path.join(output_dir, '{res}.{ext}'.format(
       res=resolution,
-      ext='mp3' if resolution == 0 else '.webm'))
+      ext='mp3' if resolution == 0 else 'webm'))
     if resolution == 0:
       audio.encode_mp3(
         input_file, output_file,

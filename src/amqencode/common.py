@@ -1,25 +1,16 @@
 __all__ = [
   'map_settings',
-  'get_null_output',
   'dict_filter_stream',
   'parse_filter_string'
 ]
 
-import os
-from typing import Union, Dict
-
+from typing import Dict, Union
 
 map_settings = {
   'map_metadata': -1,
   'map_chapters': -1,
   'sn': None
 }
-
-
-def get_null_output() -> str:
-  """Returns the name of the null output device based on OS"""
-  if os.name == 'nt': return 'NUL'
-  return '/dev/null/'
 
 
 def apply_filters(
@@ -35,8 +26,8 @@ def apply_filters(
 
 def parse_filter_string(input_filters: Union[str, dict]) -> Dict[str, any]:
   """Converts a filter string into a filter dict"""
+  if len(input_filters) == 0: return {}
   if isinstance(input_filters, str):
-    if len(input_filters) == 0: return {}
     return dict(
       [x.split('=') if '=' in x else [x, None]
       for x in input.split(',')])

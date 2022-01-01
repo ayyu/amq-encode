@@ -8,11 +8,12 @@ __all__ = [
 
 import re
 import subprocess
+from os import devnull
 from typing import Dict, Union
 
 import ffmpeg
 
-from .common import apply_filters, get_null_output, parse_filter_string
+from .common import apply_filters, parse_filter_string
 
 _mean_dB_re = re.compile(r' mean_volume: (?P<mean>-?[0-9]+\.?[0-9]*)')
 _peak_dB_re = re.compile(r' max_volume: (?P<peak>-?[0-9]+\.?[0-9]*)') 
@@ -41,7 +42,7 @@ def detect_volume(
   cmd = (ffmpeg
     .input(input_file)
     .filter('volumedetect')
-    .output(get_null_output(), format='null', **kwargs)
+    .output(devnull, format='null', **kwargs)
     .compile())
   p = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
   output = p.stdout.decode('utf-8').splitlines()

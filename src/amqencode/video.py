@@ -4,6 +4,7 @@ __all__ = [
   'probe_dimensions'
 ]
 
+from os import devnull
 
 from fractions import Fraction
 from typing import Dict, Union
@@ -56,7 +57,7 @@ def encode_webm(
   video = common.apply_filters(input.video, common.parse_filter_string(vf))
   ffmpeg.output(
     video,
-    common.get_null_output(), format='null',
+    devnull, format='null',
     **dict({'pass': 1}, **kwargs)).run()
   ffmpeg.output(
     audio, video,
