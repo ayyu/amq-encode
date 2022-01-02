@@ -37,13 +37,21 @@ target_mean_dB = -18.5
 
 def detect_volume(
     input_file: str,
-    **kwargs) -> Dict[str, float]:
+    ss: str = None,
+    to: str = None,
+    t: str = None,
+    **kwargs) -> Dict[str, Union[float, None]]:
   """Return peak and mean dB for the input file"""
+  ignore_streams = {'vn': None, 'sn': None, 'dn': None}
   cmd = (ffmpeg
     .input(input_file)
     .filter('volumedetect')
-    .output(devnull, format='null', **kwargs)
+    .output(devnull, format='null', **ignore_streams, **kwargs)
     .compile())
+  # force fast seek or else volume detection won't respect seeking
+  if not to == None: cmd[1:1] = ['-to', to]
+  elif not t == None: cmd[1:1] = ['-t', t]
+  if not ss == None: cmd[1:1] = ['-ss', ss]
   p = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
   output = p.stdout.decode('utf-8').splitlines()
   mean_dB = None
@@ -51,11 +59,11 @@ def detect_volume(
   for line in output:
     mean_dB_match = _mean_dB_re.search(line)
     peak_dB_match = _peak_dB_re.search(line)
-    if mean_dB_match: mean_dB = mean_dB_match.group('mean')
-    if peak_dB_match: peak_dB = peak_dB_match.group('peak')
+    if mean_dB_match: mean_dB = float(mean_dB_match.group('mean'))
+    if peak_dB_match: peak_dB = float(peak_dB_match.group('peak'))
   return {
-    'peak_dB': float(peak_dB),
-    'mean_dB': float(mean_dB)}
+    'peak_dB': peak_dB,
+    'mean_dB': mean_dB}
 
 
 def get_norm_filter(
@@ -67,7 +75,7 @@ def get_norm_filter(
   input_levels = detect_volume(input_file, **kwargs)
   diff_peak = target_peak_dB - input_levels['peak_dB']
   diff_mean = target_mean_dB - input_levels['mean_dB']
-  return {'volume': '{}dB'.format(min(diff_peak, diff_mean))}
+  return {'volume': '{:.1f}dB'.format(min(diff_peak, diff_mean))}
 
 
 def encode_mp3(

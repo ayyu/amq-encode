@@ -76,7 +76,6 @@ def encode_all(
   af = common.parse_filter_string(af)
   vf.update(video.init_vf)
   if norm:
-    print('Detecting input volume')
     af = dict(af, **audio.get_norm_filter(input_file, **kwargs))
   probe_data = video.probe_dimensions(input_file)
   probe_data.update(override_dimensions)
