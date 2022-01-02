@@ -61,7 +61,7 @@ def detect_volume(
 def get_norm_filter(
     input_file: str,
     target_peak_dB: float = target_peak_dB,
-    target_mean_dB: float = target_peak_dB,
+    target_mean_dB: float = target_mean_dB,
     **kwargs) -> Dict[str, str]:
   """Returns a filter dictionary for applying gain based on peak and mean dB"""
   input_levels = detect_volume(input_file, **kwargs)
