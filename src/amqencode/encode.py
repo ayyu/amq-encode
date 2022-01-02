@@ -1,7 +1,5 @@
 __all__ = [
   'encode_all',
-  'encode_webm',
-  'encode_mp3',
   'mux_clean_directory',
   'mux_clean',
 ]
@@ -86,7 +84,7 @@ def encode_all(
     **kwargs)
   # sort unique resolutions
   resolutions = sorted(list(set(resolutions)))
-  smallest_resolution = next((i for i, x in enumerate(resolutions) if x), None)
+  first_video = next((i for i, x in enumerate(resolutions) if x), None)
   for resolution in resolutions:
     output_file = os.path.join(output_dir, '{res}.{ext}'.format(
       res=resolution,
@@ -99,7 +97,7 @@ def encode_all(
         **common_settings)
     else:
       if (resolution > probe_data['height']+16 and
-          resolution > smallest_resolution):
+          resolution > resolutions[first_video]):
         print('Skipping {}p due to insufficient input dimensions'.format(resolution))
         continue
       vf.update(scale='{w}x{h}'.format(

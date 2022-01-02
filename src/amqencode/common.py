@@ -1,6 +1,6 @@
 __all__ = [
   'map_settings',
-  'dict_filter_stream',
+  'apply_filters',
   'parse_filter_string'
 ]
 

@@ -1,7 +1,8 @@
 __all__ = [
   'vp9_settings',
   'resolutions',
-  'probe_dimensions'
+  'probe_dimensions',
+  'encode_webm'
 ]
 
 from os import devnull

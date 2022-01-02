@@ -3,7 +3,8 @@ __all__ = [
   'mp3_settings',
   'opus_settings',
   'detect_volume',
-  'get_norm_filter'
+  'get_norm_filter',
+  'encode_mp3'
 ]
 
 import re
