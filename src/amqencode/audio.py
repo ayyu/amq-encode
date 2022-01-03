@@ -14,7 +14,7 @@ from typing import Dict, Union
 
 import ffmpeg
 
-from .common import apply_filters, parse_filter_string
+from . import common
 
 _mean_dB_re = re.compile(r' mean_volume: (?P<mean>-?[0-9]+\.?[0-9]*)')
 _peak_dB_re = re.compile(r' max_volume: (?P<peak>-?[0-9]+\.?[0-9]*)') 
@@ -38,21 +38,17 @@ target_mean_dB = -18.5
 
 def detect_volume(
     input_file: str,
-    ss: str = None,
-    to: str = None,
-    t: str = None,
     **kwargs) -> Dict[str, Union[float, None]]:
   """Return peak and mean dB for the input file"""
   ignore_streams = {'vn': None, 'sn': None, 'dn': None}
+  seek = common.extract_seek(kwargs)
   cmd = (ffmpeg
     .input(input_file)
     .filter('volumedetect')
     .output(devnull, format='null', **ignore_streams, **kwargs)
     .compile())
   # force fast seek or else volume detection won't respect seeking
-  if not to == None: cmd[1:1] = ['-to', to]
-  elif not t == None: cmd[1:1] = ['-t', t]
-  if not ss == None: cmd[1:1] = ['-ss', ss]
+  if not len(seek) == 0: cmd[1:1] = seek
   p = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
   output = p.stdout.decode('utf-8').splitlines()
   mean_dB = None
@@ -85,8 +81,13 @@ def encode_mp3(
     af: Union[str, dict] = {},
     **kwargs) -> None:
   """Encodes an MP3 from the input file"""
-  audio = apply_filters(
+  audio = common.apply_filters(
     ffmpeg.input(input_file).audio,
-    parse_filter_string(af))
-  stream = ffmpeg.output(audio, output_file, format='mp3', **kwargs)
-  stream.run(overwrite_output=True)
+    common.parse_filter_string(af))
+  seek = common.extract_seek(kwargs)
+  cmd = ffmpeg.output(
+    audio, output_file,
+    format='mp3', **kwargs).compile(overwrite_output=True)
+  if not len(seek) == 0: cmd[1:1] = seek
+  subprocess.run(cmd)
+  

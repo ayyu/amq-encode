@@ -1,16 +1,15 @@
 __all__ = [
   'map_settings',
   'apply_filters',
+  'extract_seek',
   'parse_filter_string'
 ]
 
 from typing import Dict, Union
 
 map_settings = {
-  'map_metadata': -1,
-  'map_chapters': -1,
-  'sn': None
-}
+  'dn': None,
+  'sn': None}
 
 
 def apply_filters(
@@ -32,3 +31,15 @@ def parse_filter_string(input_filters: Union[str, dict]) -> Dict[str, any]:
       [x.split('=') if '=' in x else [x, None]
       for x in input.split(',')])
   return input_filters
+
+
+def extract_seek(kwargs: Dict[str, any]) -> list:
+  seek = []
+  if 'ss' in kwargs:
+    seek.extend(['-ss', kwargs.pop('ss'), '-accurate_seek'])
+  if 't' in kwargs:
+    seek.extend(['-t', kwargs.pop('t')])
+    kwargs.pop('to', None)
+  elif 'to' in kwargs:
+    seek.extend(['-to', kwargs.pop('to')])
+  return seek

@@ -8,6 +8,7 @@ __all__ = [
 from os import devnull
 
 from fractions import Fraction
+import subprocess
 from typing import Dict, Union
 
 import ffmpeg
@@ -53,15 +54,20 @@ def encode_webm(
     af: Union[str, dict] = {},
     **kwargs) -> None:
   """Encodes a webm from the supplied inputs"""
+  seek = common.extract_seek(kwargs)
   input = ffmpeg.input(input_file)
   audio = common.apply_filters(input.audio, common.parse_filter_string(af))
   video = common.apply_filters(input.video, common.parse_filter_string(vf))
-  ffmpeg.output(
+  pass_1_cmd = ffmpeg.output(
     video,
     devnull, format='null',
-    **dict({'pass': 1}, **kwargs)).run()
-  ffmpeg.output(
+    **dict({'pass': 1}, **kwargs)).compile()
+  pass_2_cmd = ffmpeg.output(
     audio, video,
     output_file, format='webm',
-    **dict({'pass': 2}, **kwargs)).run(overwrite_output=True)
-
+    **dict({'pass': 2}, **kwargs)).compile(overwrite_output=True)
+  if not len(seek) == 0:
+    pass_1_cmd[1:1] = seek
+    pass_2_cmd[1:1] = seek
+  subprocess.run(pass_1_cmd)
+  subprocess.run(pass_2_cmd)
