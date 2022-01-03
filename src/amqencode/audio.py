@@ -15,6 +15,7 @@ from typing import Dict, Union
 import ffmpeg
 
 from . import common
+from .video import vp9_settings
 
 _mean_dB_re = re.compile(r' mean_volume: (?P<mean>-?[0-9]+\.?[0-9]*)')
 _peak_dB_re = re.compile(r' max_volume: (?P<peak>-?[0-9]+\.?[0-9]*)') 
@@ -85,6 +86,7 @@ def encode_mp3(
     ffmpeg.input(input_file).audio,
     common.parse_filter_string(af))
   seek = common.extract_seek(kwargs)
+  for key in vp9_settings: kwargs.pop(key, None)
   cmd = ffmpeg.output(
     audio, output_file,
     format='mp3', **kwargs).compile(overwrite_output=True)
