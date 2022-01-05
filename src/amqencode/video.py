@@ -50,14 +50,14 @@ def probe_dimensions(input_file: str) -> Dict[str, any]:
 def encode_webm(
     input_file: str,
     output_file: str,
-    vf: Union[str, dict] = {},
-    af: Union[str, dict] = {},
     **kwargs) -> None:
   """Encodes a webm from the supplied inputs"""
   seek = common.extract_seek(kwargs)
   input = ffmpeg.input(input_file)
-  audio = common.apply_filters(input.audio, common.parse_filter_string(af))
-  video = common.apply_filters(input.video, common.parse_filter_string(vf))
+  audio = common.apply_filters(input.audio,
+    common.parse_filter_string(kwargs.pop('af', {})))
+  video = common.apply_filters(input.video,
+    common.parse_filter_string(kwargs.pop('vf', {})))
   pass_1_cmd = ffmpeg.output(
     video,
     devnull, format='null',
@@ -65,7 +65,7 @@ def encode_webm(
   pass_2_cmd = ffmpeg.output(
     audio, video,
     output_file, format='webm',
-    **dict({'pass': 2}, **kwargs)).compile(overwrite_output=True)
+    **dict({'pass': 2}, **kwargs)).compile()
   if not len(seek) == 0:
     pass_1_cmd[1:1] = seek
     pass_2_cmd[1:1] = seek

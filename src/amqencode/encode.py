@@ -59,32 +59,34 @@ def mux_clean(
 def encode_all(
     input_file: str,
     output_dir: str,
-    vf: Union[str, dict] = {},
-    af: Union[str, dict] = {},
     norm: bool = False,
-    vp9_settings: dict = {},
-    resolutions: list = video.resolutions,
-    override_dimensions: dict = {},
     **kwargs) -> None:
   """Encodes a video in all requested resolutions and an mp3."""
-  vp9_settings = dict(video.vp9_settings, **vp9_settings)
+  resolutions = sorted({res for res
+    in kwargs.pop('resolutions', video.resolutions)
+    if res not in kwargs.pop('skip_resolutions', [])})
+  first_video = next((
+    i for i, x
+    in enumerate(resolutions)
+    if not (x == 0 or x == '0')), None)
+  vp9_settings = dict(
+    video.vp9_settings,
+    **kwargs.pop('vp9_settings', {}))
   if not os.path.exists(output_dir): os.makedirs(output_dir)
-  # turn filters into dicts
-  vf = common.parse_filter_string(vf)
-  af = common.parse_filter_string(af)
-  vf.update(video.init_vf)
-  if norm:
-    af = dict(af, **audio.get_norm_filter(input_file, **kwargs))
-  probe_data = video.probe_dimensions(input_file)
-  probe_data.update(override_dimensions)
-  # common settings
+  probe_data = dict(
+    video.probe_dimensions(input_file),
+    **kwargs.pop('override_dimensions', {}),
+    **kwargs.pop('force_dimensions', {}))
+  vf = dict(
+    video.init_vf,
+    **common.parse_filter_string(kwargs.pop('vf', {})))
+  af = dict(
+    common.parse_filter_string(kwargs.pop('af', {})),
+    **(audio.get_norm_filter(input_file, **kwargs) if norm else {}))
   common_settings = dict(
     common.map_settings,
     **audio.audio_settings,
     **kwargs)
-  # sort unique resolutions
-  resolutions = sorted(list(set(resolutions)))
-  first_video = next((i for i, x in enumerate(resolutions) if x), None)
   for resolution in resolutions:
     output_file = os.path.join(output_dir, '{res}.{ext}'.format(
       res=resolution,

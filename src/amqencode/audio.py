@@ -79,17 +79,17 @@ def get_norm_filter(
 def encode_mp3(
     input_file: str,
     output_file: str,
-    af: Union[str, dict] = {},
     **kwargs) -> None:
   """Encodes an MP3 from the input file"""
   audio = common.apply_filters(
     ffmpeg.input(input_file).audio,
-    common.parse_filter_string(af))
-  seek = common.extract_seek(kwargs)
+    common.parse_filter_string(kwargs.pop('af', {})))
+  kwargs.pop('vf', None)
   for key in vp9_settings: kwargs.pop(key, None)
+  seek = common.extract_seek(kwargs)
   cmd = ffmpeg.output(
     audio, output_file,
-    format='mp3', **kwargs).compile(overwrite_output=True)
+    format='mp3', **kwargs).compile()
   if not len(seek) == 0: cmd[1:1] = seek
   subprocess.run(cmd)
   
