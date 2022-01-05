@@ -66,9 +66,10 @@ def encode_all(
   """Encodes a video in all requested resolutions and an mp3."""
 
   if not os.path.exists(output_dir): os.makedirs(output_dir)
+  skip_resolutions = kwargs.pop('skip_resolutions', [])
   resolutions = sorted({res for res
     in kwargs.pop('resolutions', video.resolutions)
-    if res not in kwargs.pop('skip_resolutions', [])})
+    if res not in skip_resolutions})
   first_video = next((
     i for i, x
     in enumerate(resolutions)
