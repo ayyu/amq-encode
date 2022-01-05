@@ -6,7 +6,6 @@ __all__ = [
 
 
 import os
-from typing import Union
 
 import ffmpeg
 
@@ -22,8 +21,7 @@ def mux_clean_directory(
   for file in os.listdir(input_dir):
     if file.endswith(('.webm', '.mp3')):
       mux_clean(
-        os.path.join(input_dir, file),
-        input_audio,
+        os.path.join(input_dir, file), input_audio,
         os.path.join(output_dir, file),
         norm)
 
@@ -37,16 +35,20 @@ def mux_clean(
     output_file: str,
     norm: bool = False) -> None:
   """Muxes a given video input file with a clean audio input file"""
+
   output_dir = os.path.dirname(output_file)
+  if not os.path.exists(output_dir): os.makedirs(output_dir)
+
   audio_s = ffmpeg.input(input_audio).audio
   args = dict(audio.audio_settings)
-  if not os.path.exists(output_dir): os.makedirs(output_dir)
   if norm: audio_s = common.apply_filters(audio_s, audio.get_norm_filter(input_audio))
+
   if input_video.endswith('.mp3'):
     args = dict(
       {'vn': None, 'shortest': None},
       **args, **audio.mp3_settings)
     stream = ffmpeg.output(audio_s, output_file, **args)
+
   else:
     video_s = ffmpeg.input(input_video).video
     args = dict(
@@ -62,6 +64,8 @@ def encode_all(
     norm: bool = False,
     **kwargs) -> None:
   """Encodes a video in all requested resolutions and an mp3."""
+
+  if not os.path.exists(output_dir): os.makedirs(output_dir)
   resolutions = sorted({res for res
     in kwargs.pop('resolutions', video.resolutions)
     if res not in kwargs.pop('skip_resolutions', [])})
@@ -69,34 +73,39 @@ def encode_all(
     i for i, x
     in enumerate(resolutions)
     if not (x == 0 or x == '0')), None)
+
   vp9_settings = dict(
     video.vp9_settings,
     **kwargs.pop('vp9_settings', {}))
-  if not os.path.exists(output_dir): os.makedirs(output_dir)
   probe_data = dict(
     video.probe_dimensions(input_file),
     **kwargs.pop('override_dimensions', {}),
     **kwargs.pop('force_dimensions', {}))
+
   vf = dict(
     video.init_vf,
     **common.parse_filter_string(kwargs.pop('vf', {})))
   af = dict(
     common.parse_filter_string(kwargs.pop('af', {})),
     **(audio.get_norm_filter(input_file, **kwargs) if norm else {}))
+
   common_settings = dict(
     common.map_settings,
     **audio.audio_settings,
     **kwargs)
+
   for resolution in resolutions:
     output_file = os.path.join(output_dir, '{res}.{ext}'.format(
       res=resolution,
       ext='mp3' if resolution == 0 else 'webm'))
-    if resolution == 0:
+
+    if resolution == 0: # 0 = mp3
       audio.encode_mp3(
         input_file, output_file,
         af=af,
         **audio.mp3_settings,
         **common_settings)
+
     else:
       if (resolution > probe_data['height']+16 and
           resolution > resolutions[first_video]):
@@ -111,4 +120,3 @@ def encode_all(
         **vp9_settings,
         **audio.opus_settings,
         **common_settings)
-

@@ -41,6 +41,7 @@ def detect_volume(
     input_file: str,
     **kwargs) -> Dict[str, Union[float, None]]:
   """Return peak and mean dB for the input file"""
+
   ignore_streams = {'vn': None, 'sn': None, 'dn': None}
   seek = common.extract_seek(kwargs)
   cmd = (ffmpeg
@@ -48,10 +49,10 @@ def detect_volume(
     .filter('volumedetect')
     .output(devnull, format='null', **ignore_streams, **kwargs)
     .compile())
-  # force fast seek or else volume detection won't respect seeking
   if not len(seek) == 0: cmd[1:1] = seek
   p = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
   output = p.stdout.decode('utf-8').splitlines()
+
   mean_dB = None
   peak_dB = None
   for line in output:
@@ -81,15 +82,17 @@ def encode_mp3(
     output_file: str,
     **kwargs) -> None:
   """Encodes an MP3 from the input file"""
+
   audio = common.apply_filters(
     ffmpeg.input(input_file).audio,
     common.parse_filter_string(kwargs.pop('af', {})))
+
   kwargs.pop('vf', None)
   for key in vp9_settings: kwargs.pop(key, None)
+
   seek = common.extract_seek(kwargs)
   cmd = ffmpeg.output(
     audio, output_file,
     format='mp3', **kwargs).compile()
   if not len(seek) == 0: cmd[1:1] = seek
   subprocess.run(cmd)
-  

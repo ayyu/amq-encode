@@ -9,7 +9,7 @@ from os import devnull
 
 from fractions import Fraction
 import subprocess
-from typing import Dict, Union
+from typing import Dict
 
 import ffmpeg
 
@@ -52,12 +52,14 @@ def encode_webm(
     output_file: str,
     **kwargs) -> None:
   """Encodes a webm from the supplied inputs"""
-  seek = common.extract_seek(kwargs)
+
   input = ffmpeg.input(input_file)
   audio = common.apply_filters(input.audio,
     common.parse_filter_string(kwargs.pop('af', {})))
   video = common.apply_filters(input.video,
     common.parse_filter_string(kwargs.pop('vf', {})))
+
+  seek = common.extract_seek(kwargs)
   pass_1_cmd = ffmpeg.output(
     video,
     devnull, format='null',
