@@ -43,8 +43,14 @@ def probe_dimensions(input_file: str) -> Dict[str, any]:
   return {
     'width': int(metadata['width']),
     'height': int(metadata['height']),
-    'sar': Fraction(metadata['sample_aspect_ratio'].replace(':', '/')),
-    'dar': Fraction(metadata['display_aspect_ratio'].replace(':', '/'))}
+    'sar': Fraction(metadata.get(
+      'sample_aspect_ratio',
+      '1:1').replace(':', '/')),
+    'dar': Fraction(metadata.get(
+      'display_aspect_ratio',
+      '{w}:{h}'.format(w=metadata['width'], h=metadata['height'])
+      ).replace(':', '/'))
+    }
 
 
 def encode_webm(

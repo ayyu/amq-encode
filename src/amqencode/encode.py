@@ -17,7 +17,9 @@ def mux_clean_directory(
     input_audio: str,
     output_dir: str = './clean/',
     norm: bool = False) -> None:
-  """Muxes all mp3 and webm files in the input directory with a clean audio input file"""
+  """
+  Muxes all mp3 and webm files in the input directory with a clean audio file.
+  """
   for file in os.listdir(input_dir):
     if file.endswith(('.webm', '.mp3')):
       mux_clean(
@@ -41,7 +43,8 @@ def mux_clean(
 
   audio_s = ffmpeg.input(input_audio).audio
   args = dict(audio.audio_settings)
-  if norm: audio_s = common.apply_filters(audio_s, audio.get_norm_filter(input_audio))
+  if norm:
+    audio_s = common.apply_filters(audio_s, audio.get_norm_filter(input_audio))
 
   if input_video.endswith('.mp3'):
     args = dict(
@@ -110,7 +113,8 @@ def encode_all(
     else:
       if (resolution > probe_data['height']+16 and
           resolution > resolutions[first_video]):
-        print('Skipping {}p due to insufficient input dimensions'.format(resolution))
+        print('Skipping {}p due to insufficient input dimensions'
+          .format(resolution))
         continue
       vf.update(scale='{w}x{h}'.format(
         w=round(probe_data['dar']*resolution),
