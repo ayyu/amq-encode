@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 __all__ = [
   'encode_all',
   'mux_clean_directory',
@@ -17,8 +19,14 @@ def mux_clean_directory(
     input_audio: str,
     output_dir: str = './clean/',
     norm: bool = False) -> None:
-  """
-  Muxes all mp3 and webm files in the input directory with a clean audio file.
+  r"""
+  Muxes all webm and mp3 files in the input directory with a clean audio file.
+
+  Args:
+    input_dir (str): Path containing webm and/or mp3 files to be muxed.
+    input_audio (str): Path to clean audio file to mux.
+    output_dir (str): Path to output muxed files. Defaults to `./clean/`.
+    norm (bool): Whether to normalize audio level of the outputs.
   """
   for file in os.listdir(input_dir):
     if file.endswith(('.webm', '.mp3')):
@@ -36,7 +44,15 @@ def mux_clean(
     input_audio: str,
     output_file: str,
     norm: bool = False) -> None:
-  """Muxes a given video input file with a clean audio input file"""
+  r"""
+  Muxes an input file with a clean audio file.
+
+  Args:
+    input_video (str): Path to video file to mux.
+    input_audio (str): Path to clean audio file to mux.
+    output_file (str): Path to output muxed file.
+    norm (bool): Whether to normalize audio level of the output.
+  """
 
   output_dir = os.path.dirname(output_file)
   if not os.path.exists(output_dir): os.makedirs(output_dir)
@@ -63,10 +79,38 @@ def mux_clean(
 
 def encode_all(
     input_file: str,
-    output_dir: str,
+    output_dir: str = './source/',
     norm: bool = False,
     **kwargs) -> None:
-  """Encodes a video in all requested resolutions and an mp3."""
+  r"""
+  Encodes a video in all requested resolutions.
+
+  Args:
+    input_file (str): Path to video file to encode from.
+    output_dir (str, optional): Path to output encoded files.
+      Defaults to `./source/`.
+    norm (bool): Whether to normalize audio level of the output.
+    **kwargs: Arbitrary keyword arguments. Includes arguments specific to this
+      package, as well as any native ffmpeg parameters you wish to pass.
+    
+  Keyword Args:
+    resolutions (list of int): List of resolutions to be encoded,
+      in terms of video height. Include 0 to encode an mp3.
+      Defaults to `[0, 360, 480, 720]`.
+    skip_resolutions (list): List of resolutions to skip. Use this if you want
+      to use the default list of resolutions and skip a specific one.
+    vp9_settings (dict of str: str/int/None):
+      Dictionary of settings to override default VP9 parameters.
+    force_dimensions (dict of str: int/Fraction):
+      Dictionary of dimensional data to force, ignoring dimensions probed using
+      ffprobe on the source video.
+      Valid keys are `width`, `height`, `sar`, and `dar`.
+    vf (str or dict of str: str/None):
+      String or dictionary of video filters to apply.
+    af (str or dict of str: str/None):
+      String or dictionary of audio filters to apply.
+      Normalization filter will be applied after these, if requested.
+  """
 
   if not os.path.exists(output_dir): os.makedirs(output_dir)
   skip_resolutions = kwargs.pop('skip_resolutions', [])
