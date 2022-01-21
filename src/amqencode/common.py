@@ -10,7 +10,8 @@ from typing import Dict, Union
 
 map_settings = {
   'dn': None,
-  'sn': None}
+  'sn': None,
+  'map_chapters': -1}
 """(dict of str: None): Streams to deselect for ffmpeg output mapping."""
 
 
