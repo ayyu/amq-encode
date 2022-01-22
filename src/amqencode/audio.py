@@ -11,7 +11,8 @@ __all__ = [
     'OPUS_SETTINGS',
     'detect_volume',
     'get_norm_filter',
-    'encode_mp3'
+    'probe_duration',
+    'encode_mp3',
 ]
 
 
@@ -65,10 +66,10 @@ def detect_volume(
         (dict of str: float): Dictionary with keys `peak_db` and `mean_db`.
     """
     seek = common.extract_seek(kwargs)
-    cmd = (ffmpeg.input(input_file)
-           .filter('volumedetect')
-           .output(devnull, format='null', **_IGNORE_STREAMS, **kwargs)
-           .compile())
+    cmd =  (ffmpeg.input(input_file)
+            .filter('volumedetect')
+            .output(devnull, format='null', **_IGNORE_STREAMS, **kwargs)
+            .compile())
     if len(seek) != 0:
         cmd[1:1] = seek
     proc = subprocess.run(
