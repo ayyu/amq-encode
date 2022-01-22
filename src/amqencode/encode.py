@@ -127,17 +127,18 @@ def encode_all(
                 af=audio_filters,
                 **audio.MP3_SETTINGS,
                 **common_settings)
+            continue
 
-        else:
-            if (resolution > probe_data['height']+16 and
-                    resolution > resolutions[first_video]):
-                print(f'Skipping {resolution}p due to insufficient input dimensions')
-                continue
-            video_filters.update(
-                scale=f"{round(probe_data['dar']*resolution)}x{resolution}")
-            video.encode_webm(
-                input_file, output_file,
-                vf=video_filters, af=audio_filters,
-                **vp9_settings,
-                **audio.OPUS_SETTINGS,
-                **common_settings)
+        if (resolution > probe_data['height']+16 and
+            resolution > resolutions[first_video]):
+            print(f"Skipping {resolution}p due to insufficient video height")
+            continue
+
+        video_filters.update(
+            scale=f"{round(probe_data['dar']*resolution)}x{resolution}")
+        video.encode_webm(
+            input_file, output_file,
+            vf=video_filters, af=audio_filters,
+            **vp9_settings,
+            **audio.OPUS_SETTINGS,
+            **common_settings)
