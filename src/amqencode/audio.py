@@ -118,6 +118,20 @@ def get_norm_filter(
     return {'volume': f"{min(diff_peak, diff_mean):.1f}dB"}
 
 
+def probe_duration(input_file: str) -> float:
+    """
+    Returns the duration of the first audio stream of an input file.
+
+    Args:
+        input_file (str): Path to media file to probe.
+
+    Returns:
+        (float): Duration of audio stream in seconds.
+    """
+    metadata = ffmpeg.probe(input_file, select_streams='a')['streams'][0]
+    return float(metadata['duration'])
+
+
 def encode_mp3(
         input_file: str,
         output_file: str,
