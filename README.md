@@ -1,8 +1,10 @@
 # ffmpeg scripts for handicaps
 
-This Python 3 module simplifies 2-pass VP9/Opus encoding for AMQ using `ffmpeg`.
+This Python 3 package simplifies 2-pass VP9/Opus encoding for AMQ using `ffmpeg`.
 It's basically a wrapper with presets for [ffmpeg-python](https://github.com/kkroening/ffmpeg-python),
 with some hacky stuff to get 2-pass encodes working.
+
+You can use it to encode every resolution of a video with a single command.
 
 You can override a lot of the presets.
 Passing `norm=True` automatically adjusts volume levels for you.
@@ -23,15 +25,19 @@ or maybe this on Windows
 py -3 -m pip install amqencode
 ```
 
-Also make sure that ffmpeg is on your PATH.
+Also make sure that `ffmpeg` is on your PATH.
 
 ## Usage
 
 `import amqencode` in your python scripts.
 
+See `sample_encode.py` for an example of a script that encodes a video into
+mp3 and webms, then muxes those outputs with clean audio.
+
 ### CLI
 
-If you just want to encode a file without writing a standalone script, you can call it directly.
+If you just want to encode a file without writing a standalone script,
+you can call the package directly from a terminal.
 
 *nix
 
