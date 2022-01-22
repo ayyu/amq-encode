@@ -38,8 +38,9 @@ def mux_clean(
             audio.get_norm_filter(input_audio))
 
     if input_video.endswith('.mp3'):
+        duration = audio.probe_duration(input_video)
         args = dict(
-            {'vn': None, 'shortest': None},
+            {'vn': None, 't': f"{duration:.3f}"},
             **args, **audio.MP3_SETTINGS)
         stream = ffmpeg.output(audio_stream, output_file, **args)
 
