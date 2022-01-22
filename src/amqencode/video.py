@@ -123,5 +123,6 @@ def encode_webm(
     if len(seek) != 0:
         pass_1_cmd[1:1] = seek
         pass_2_cmd[1:1] = seek
+
     subprocess.run(pass_1_cmd, check=False)
     subprocess.run(pass_2_cmd, check=False)

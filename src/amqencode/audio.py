@@ -65,6 +65,7 @@ def detect_volume(
     Returns:
         (dict of str: float): Dictionary with keys `peak_db` and `mean_db`.
     """
+
     seek = common.extract_seek(kwargs)
     cmd =  (ffmpeg.input(input_file)
             .filter('volumedetect')
@@ -72,6 +73,7 @@ def detect_volume(
             .compile())
     if len(seek) != 0:
         cmd[1:1] = seek
+
     proc = subprocess.run(
         cmd, check=False,
         stdout=subprocess.PIPE,
@@ -169,4 +171,5 @@ def encode_mp3(
         format='mp3', **kwargs).compile()
     if len(seek) != 0:
         cmd[1:1] = seek
+
     subprocess.run(cmd, check=False)

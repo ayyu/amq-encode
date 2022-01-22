@@ -99,6 +99,7 @@ def encode_all(
     vp9_settings = dict(
         video.VP9_SETTINGS,
         **kwargs.pop('vp9_settings', {}))
+
     probe_data = dict(
         video.probe_dimensions(input_file),
         **kwargs.pop('override_dimensions', {}),
@@ -117,11 +118,11 @@ def encode_all(
         **kwargs)
 
     for resolution in resolutions:
-        output_file = os.path.join(
-            output_dir,
-            f"{resolution}.{'mp3' if resolution == 0 else 'webm'}")
+
+        resolution = int(resolution)
 
         if resolution == 0:  # 0 = mp3
+            output_file = os.path.join(output_dir, f"{resolution}.mp3")
             audio.encode_mp3(
                 input_file, output_file,
                 af=audio_filters,
@@ -134,8 +135,10 @@ def encode_all(
             print(f"Skipping {resolution}p due to insufficient video height")
             continue
 
-        video_filters.update(
-            scale=f"{round(probe_data['dar']*resolution)}x{resolution}")
+        output_file = os.path.join(output_dir, f"{resolution}.webm")
+        width = round(probe_data['dar'] * resolution)
+        height = resolution
+        video_filters.update(scale=f"{width}x{height}")
         video.encode_webm(
             input_file, output_file,
             vf=video_filters, af=audio_filters,

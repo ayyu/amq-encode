@@ -32,6 +32,7 @@ def mux_clean(
 
     audio_stream = ffmpeg.input(input_audio).audio
     args = dict(audio.AUDIO_SETTINGS)
+
     if norm:
         audio_stream = common.apply_filters(
             audio_stream,
@@ -50,4 +51,5 @@ def mux_clean(
             {'c:v': 'copy', 'shortest': None},
             **args, **audio.OPUS_SETTINGS)
         stream = ffmpeg.output(video_stream, audio_stream, output_file, **args)
+
     stream.run(overwrite_output=True)

@@ -61,9 +61,9 @@ def parse_filter_string(input_filters: Union[str, dict]) -> Dict[str, any]:
     if len(input_filters) == 0:
         return {}
     if isinstance(input_filters, str):
-        return dict(
-            [x.split('=') if '=' in x else [x, None]
-             for x in input_filters.split(',')])
+        return {x.split('=') if '=' in x
+                else [x, None]
+                for x in input_filters.split(',')}
     return input_filters
 
 
