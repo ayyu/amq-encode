@@ -35,7 +35,8 @@ def mux_clean_directory(
     for file in os.listdir(input_dir):
         if file.endswith(('.webm', '.mp3')):
             mux.mux_clean(
-                os.path.join(input_dir, file), input_audio,
+                os.path.join(input_dir, file),
+                input_audio,
                 os.path.join(output_dir, file),
                 norm)
 
@@ -84,7 +85,7 @@ def encode_all(
     common.ensure_dir(output_dir + '/')
 
     if isinstance(skip_resolutions, str):
-        skip_resolutions = skip_resolutions.split(',')
+        skip_resolutions = [int(x) for x in skip_resolutions.split(',')]
 
     resolutions = sorted(
         {res for res
@@ -93,7 +94,7 @@ def encode_all(
     first_video = next((
         i for i, x
         in enumerate(resolutions)
-        if not (x == 0 or x == '0')), None)
+        if not x in (0, '0')), None)
 
     vp9_settings = dict(
         video.VP9_SETTINGS,
