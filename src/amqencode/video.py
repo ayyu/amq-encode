@@ -66,7 +66,10 @@ def probe_dimensions(input_file: str) -> Dict[str, any]:
             Defaults to `sar` = 1 and `dar` = `width`/`height` if those aren't
             set in the file.
     """
-    metadata = ffmpeg.probe(input_file, select_streams='v')['streams'][0]
+    try:
+        metadata = ffmpeg.probe(input_file, select_streams='v')['streams'][0]
+    except ffmpeg.Error as err:
+        print(err.stderr)
     return {
         'width': int(metadata['width']),
         'height': int(metadata['height']),
