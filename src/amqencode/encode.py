@@ -12,7 +12,6 @@ __all__ = [
 ]
 
 
-from tkinter.font import BOLD
 from typing import Union
 import os
 
@@ -123,7 +122,7 @@ def encode_all(
 
         resolution = int(resolution)
 
-        if resolution == 0 and not muted:  # 0 = mp3
+        if resolution == 0 and muted is not True:  # 0 = mp3
             output_file = os.path.join(output_dir, f"{resolution}.mp3")
             audio.encode_mp3(
                 input_file, output_file,

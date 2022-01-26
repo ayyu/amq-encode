@@ -113,15 +113,15 @@ def encode_webm(
         common.parse_filter_string(kwargs.pop('vf', {})))
 
     seek = common.extract_seek(kwargs)
-    output_stream = video_stream
+    output_stream = [video_stream]
     pass_1_cmd = ffmpeg.output(
-        output_stream,
+        *output_stream,
         devnull, format='null',
         **dict({'pass': 1}, **kwargs)).compile()
     if not muted:
-        output_stream = ffmpeg.merge_outputs(audio_stream, video_stream)
+        output_stream.append(audio_stream)
     pass_2_cmd = ffmpeg.output(
-        output_stream,
+        *output_stream,
         output_file, format='webm',
         **dict({'pass': 2}, **kwargs)).compile()
     if len(seek) != 0:
