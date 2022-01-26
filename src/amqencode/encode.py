@@ -12,6 +12,7 @@ __all__ = [
 ]
 
 
+from tkinter.font import BOLD
 from typing import Union
 import os
 
@@ -48,6 +49,7 @@ def encode_all(
         input_file: str,
         output_dir: str = './source/',
         norm: bool = False,
+        muted: bool = False,
         skip_resolutions: Union[str, list] = '360',
         **kwargs) -> None:
     """
@@ -121,7 +123,7 @@ def encode_all(
 
         resolution = int(resolution)
 
-        if resolution == 0:  # 0 = mp3
+        if resolution == 0 and not muted:  # 0 = mp3
             output_file = os.path.join(output_dir, f"{resolution}.mp3")
             audio.encode_mp3(
                 input_file, output_file,
@@ -142,6 +144,7 @@ def encode_all(
         video.encode_webm(
             input_file, output_file,
             vf=video_filters, af=audio_filters,
+            muted=muted,
             **vp9_settings,
             **audio.OPUS_SETTINGS,
             **common_settings)

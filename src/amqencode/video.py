@@ -83,6 +83,7 @@ def probe_dimensions(input_file: str) -> Dict[str, any]:
 def encode_webm(
         input_file: str,
         output_file: str,
+        muted: bool = False,
         **kwargs) -> None:
     """
     Encodes a webm from the supplied input file. Uses 2-pass VP9 encoding.
@@ -104,20 +105,23 @@ def encode_webm(
     common.ensure_dir(output_file)
 
     input_stream = ffmpeg.input(input_file)
-    audio = common.apply_filters(
+    audio_stream = common.apply_filters(
         input_stream.audio,
         common.parse_filter_string(kwargs.pop('af', {})))
-    video = common.apply_filters(
+    video_stream = common.apply_filters(
         input_stream.video,
         common.parse_filter_string(kwargs.pop('vf', {})))
 
     seek = common.extract_seek(kwargs)
+    output_stream = video_stream
     pass_1_cmd = ffmpeg.output(
-        video,
+        output_stream,
         devnull, format='null',
         **dict({'pass': 1}, **kwargs)).compile()
+    if not muted:
+        output_stream = ffmpeg.merge_outputs(audio_stream, video_stream)
     pass_2_cmd = ffmpeg.output(
-        audio, video,
+        output_stream,
         output_file, format='webm',
         **dict({'pass': 2}, **kwargs)).compile()
     if len(seek) != 0:
