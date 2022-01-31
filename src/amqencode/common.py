@@ -41,12 +41,16 @@ def apply_filters(
     for key, value in filters.items():
         if value is None:
             stream = stream.filter(key)
+        elif isinstance(value, list):
+            stream = stream.filter(key, *value)
+        elif isinstance(value, dict):
+            stream = stream.filter(key, **value)
         else:
             stream = stream.filter(key, value)
     return stream
 
 
-def parse_filter_string(input_filters: Union[str, dict]) -> Dict[str, any]:
+def parse_filter_string(input_filters: Union[str, dict]) -> Dict[str, list]:
     """
     Converts a filter string into a filter dictionary.
     If a filter dictionary is supplied, it will be returned unchanged.
@@ -61,7 +65,8 @@ def parse_filter_string(input_filters: Union[str, dict]) -> Dict[str, any]:
     if len(input_filters) == 0:
         return {}
     if isinstance(input_filters, str):
-        return {filter[0]: None if filter[-1] == '' else filter[-1]
+        return {filter[0]: None if filter[-1] == ''
+                                else filter[-1].split(':')
                 for filter in (strings.partition('=')
                 for strings in input_filters.split(','))}
     return input_filters
