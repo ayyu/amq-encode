@@ -48,7 +48,7 @@ def mux_clean(
     else:
         video_stream = ffmpeg.input(input_video).video
         args = dict(
-            {'c:v': 'copy', 'shortest': None},
+            {'c:v': 'copy'},
             **args, **audio.OPUS_SETTINGS)
         stream = ffmpeg.output(video_stream, audio_stream, output_file, **args)
 
